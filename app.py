@@ -23,27 +23,44 @@ sportsbook = driver.find_element(
 account_sid = 'ACbe5f026453cd2028c877428417a3337e'
 auth_token = 'c1bb955c7af60b5b837709897cd87811'
 
-# Initialize the Twilio client
-client = Client(account_sid, auth_token)
-
 # Get the text of the first matching <div> element along with sportsbook info
 parent_div = div_element.find_element(By.XPATH, './parent::div')
 matching_text = parent_div.text
 lines = matching_text.split('\n')
 
+lines.pop(10)
+
 rating = lines[6]
 if int(rating) > 50:
     sportsbook_name = sportsbook.get_attribute("alt")
-    combined_text = f"\n{matching_text}\nSportsbook: {sportsbook_name}"
-    print(combined_text)
+    # Construct the 'pick' variable with all lines except line 11
+    pick_lines = lines[:10] + lines[11:]
+    pick = "\n".join(pick_lines) + f"\nSportsbook: {sportsbook_name}"
 
-    # Send a text using Twilio
-    message = client.messages.create(
-        from_='+18339322565',
-        body=combined_text,
-        to='+14405032055'
-    )
-    print(f"Text message sent. SID: {message.sid}")
+    # Check if pick is already in the file
+    with open('picks.txt', 'r') as file:
+        existing_content = file.read()
+
+        # Split pick and existing_content into lines
+        pick_lines = pick.split('\n')[:3]  # Take the first 3 lines of pick
+        existing_lines = existing_content.split(
+            '\n')[:3]  # Take the first 3 lines
+
+        first_three_lines = '\n'.join(existing_lines)
+
+        if first_three_lines not in existing_content:
+            # Append pick to the file
+            with open('picks.txt', 'a') as file:
+                file.write(pick)
+                print("pick added to the file.")
+
+            # Send a text using Twilio
+            # message = client.messages.create(
+            #     from_='+18339322565',
+            #     body=pick,
+            #     to='+14405032055'
+            # )
+            # print(f"Text message sent. SID: {message.sid}")
 
 # Close the browser
 driver.quit()
