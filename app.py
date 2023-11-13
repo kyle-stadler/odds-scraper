@@ -1,11 +1,8 @@
+from selectors import TABLE_SELECTOR, SPORTSBOOK_SELECTOR
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from twilio.rest import Client
-
-# Constants
-SCRAPING_URL = 'https://www.oddsshopper.com/odds/shop/?operatortype=sportsbook'
-TWILIO_SID = 'ACbe5f026453cd2028c877428417a3337e'
-TWILIO_AUTH = 'c1bb955c7af60b5b837709897cd87811'
+from personal_auth import TWILIO_AUTH, TWILIO_SID, SCRAPING_URL, SENDING_NUMBER, RECEIVING_NUMBER
 
 # Initialize a headless browser
 driver = webdriver.Chrome()
@@ -13,11 +10,11 @@ driver.get(SCRAPING_URL)
 
 # The div that I'm looking to scrape is the one that all the data within the odds table shares
 div_element = driver.find_element(
-    By.CSS_SELECTOR, 'div.os-table--col.line-col.MuiDataGrid-cell--withRenderer.MuiDataGrid-cell.MuiDataGrid-cell--textLeft.MuiDataGrid-withBorderColor')
+    By.CSS_SELECTOR, TABLE_SELECTOR)
 
 # Finding sportsbook image metadata since it has a different selector than the others
 sportsbook = driver.find_element(
-    By.CSS_SELECTOR, 'img.MuiAvatar-img.css-1hy9t21')
+    By.CSS_SELECTOR, SPORTSBOOK_SELECTOR)
 
 # Extracting the text that is within the divs, the text is equal to each cell within the odds table
 parent_div = div_element.find_element(By.XPATH, './parent::div')
@@ -51,13 +48,12 @@ if int(rating) >= 20:
                 file.write(pick)
 
             # Send a text using Twilio
-            # if int(rating) >= 50:
-            #     message = client.messages.create(
-            #         from_='+18339322565',
-            #         body=pick,
-            #         to='+14405032055'
-            #     )
-            #     print(f"Text message sent. SID: {message.sid}")
+            if int(rating) >= 50:
+                message = client.messages.create(
+                    from_=SENDING_NUMBER,
+                    body=pick,
+                    to=RECEIVING_NUMBER
+                )
 
 # Close the browser
 driver.quit()
